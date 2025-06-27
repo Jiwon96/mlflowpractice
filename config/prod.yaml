@@ -1,0 +1,12 @@
+# 운영환경 전용 설정
+mlflow:
+  tracking_uri: "http://mlflow-server:5000"
+  server_port: 80
+
+data:
+  path: "/prod/data/wine-quality-white.csv"
+  version: "v2.1"
+  size: "full"
+  
+logging:
+  level: "WARNING"

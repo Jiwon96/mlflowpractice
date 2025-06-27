@@ -1,0 +1,12 @@
+name: mlflow-examples-e2e-ml-pipeline
+channels:
+    - conda-forge
+dependencies:
+    - python=3.8
+    - pip:
+        - mlflow>=1.30.0
+        - scikit-learn
+        - pytest
+        - pytest-ordering
+        - psutil
+        - virtualenv
