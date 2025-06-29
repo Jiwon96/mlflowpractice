@@ -5,15 +5,15 @@ project:
   model_name: "e2e-ml-pipeline"
 
 data:
-  path: "./data/train/wine-quality-white.csv"
+  path: "./data/dev/train/wine-quality-white.csv"
   target_column: "quality"
   test_size: 0.30
   random_state: 42
 
 mlflow:
-  tracking_uri: "http://192.168.102.74:5000"
+  tracking_uri: "http://localhost:5000"
   model_stage: "production"
-  server_port: 5001
+  server_port: 5000
 
 logging:
   level: "INFO"

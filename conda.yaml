@@ -10,3 +10,4 @@ dependencies:
         - pytest-ordering
         - psutil
         - virtualenv
+        - tensorflow>=2.8.0
