@@ -1,0 +1,16 @@
+name: mlflow_examples
+channels:
+    - conda-forge
+dependencies:
+    - python=3.9
+    - pip:
+        - mlflow>=1.30.0
+        - scikit-learn
+        - pytest
+        - pytest-ordering
+        - psutil
+        - virtualenv
+        - tensorflow>=2.15.0
+        - xgboost
+        - pandas
+        - numpy

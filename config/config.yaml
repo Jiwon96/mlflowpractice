@@ -1,0 +1,11 @@
+project:
+    name: "ml-pipeline"
+    experiment_name: "ml-pipeline"
+    model_name: "ml-pipeline"
+
+mlflow:
+    tracking_uri: "http://localhost:5000"
+    server_port: 5000
+
+logging:
+    level: "INFO"

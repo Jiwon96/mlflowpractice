@@ -1,0 +1,11 @@
+mlflow:
+    tracking_uri: "http://localhost:5000"
+    server_port: 5000
+
+data:
+    path: "./data/dev/train/wine-quality-white.csv"
+    version: "v1.0"
+    size: "sample"
+
+logging:
+    level: "DEBUG"
