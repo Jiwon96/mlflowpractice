@@ -67,7 +67,7 @@ def predict_with_api_v2():
         # inputs 형식은 제거 - MLflow 모델이 feature 이름을 요구함
     ]
     
-    url = "http://localhost:8080/invocations"
+    url = "http://localhost:8081/invocations"
     headers = {"Content-Type": "application/json"}
     
     successful_prediction = None
@@ -201,7 +201,7 @@ def get_sample_request_format():
 def test_api_connection():
     """API 서버 연결 테스트"""
     try:
-        response = requests.get("http://localhost:8080/health", timeout=5)
+        response = requests.get("http://localhost:8081/health", timeout=5)
         if response.status_code == 200:
             print("✅ API server is running")
             return True
