@@ -29,7 +29,7 @@ services:
     environment:
       - AIRFLOW__CORE__EXECUTOR=LocalExecutor
       - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://postgres:0000@postgres:5432/KWS
-      - AIRFLOW__CORE__FERNET_KEY="9AjVUQIGhNGFTS20sllWbcZmdj4JkVElIQU_Rq9J6s0="
+      - AIRFLOW__CORE__FERNET_KEY=
     ports:
       - "8080:8080"
     depends_on:
@@ -44,7 +44,7 @@ services:
     environment:
       - AIRFLOW__CORE__EXECUTOR=LocalExecutor
       - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://postgres:0000@postgres:5432/KWS
-      - AIRFLOW__CORE__FERNET_KEY="9AjVUQIGhNGFTS20sllWbcZmdj4JkVElIQU_Rq9J6s0="
+      - AIRFLOW__CORE__FERNET_KEY=
     depends_on:
       - postgres
       - airflow
