@@ -1,0 +1,72 @@
+version: "3"
+
+services:
+  postgres:
+    image: postgres:13
+    environment:
+      POSTGRES_PASSWORD: "0000"
+      POSTGRES_USER: postgres
+      POSTGRES_DB: KWS
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/KWS
+
+
+  mlflow:
+    image: python:3.9
+    command: bash -c "pip install mlflow psycopg2-binary && sleep 30 && mlflow server --backend-store-uri postgresql://postgres:0000@postgres:5432/KWS --default-artifact-root ./mlruns --host 0.0.0.0 --port 5000"
+    ports:
+      - "5000:5000"
+    depends_on:
+      - postgres
+    volumes:
+      - mlflow_data:/app/mlruns
+
+
+  airflow:
+    image: apache/airflow:2.7.1
+    environment:
+      - AIRFLOW__CORE__EXECUTOR=LocalExecutor
+      - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://postgres:0000@postgres:5432/KWS
+      - AIRFLOW__CORE__FERNET_KEY="9AjVUQIGhNGFTS20sllWbcZmdj4JkVElIQU_Rq9J6s0="
+    ports:
+      - "8080:8080"
+    depends_on:
+      - postgres
+    volumes:
+      - airflow_dags:/opt/airflow/dags
+      - airflow_logs:/opt/airflow/logs
+    command: bash -c "airflow db migrate && airflow users create --username admin --password admin --firstname Admin --lastname User --role Admin --email admin@example.com && airflow webserver"
+
+  airflow-scheduler:
+    image: apache/airflow:2.7.1
+    environment:
+      - AIRFLOW__CORE__EXECUTOR=LocalExecutor
+      - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://postgres:0000@postgres:5432/KWS
+      - AIRFLOW__CORE__FERNET_KEY="9AjVUQIGhNGFTS20sllWbcZmdj4JkVElIQU_Rq9J6s0="
+    depends_on:
+      - postgres
+      - airflow
+    volumes:
+      - airflow_dags:/opt/airflow/dags
+      - airflow_logs:/opt/airflow/logs
+    command: airflow scheduler
+  
+  minio:
+    image: minio/minio:latest
+    ports:
+      - "9000:9000"      # API 포트
+      - "9001:9001"      # 웹 콘솔 포트
+    environment:
+      - MINIO_ROOT_USER=admin
+      - MINIO_ROOT_PASSWORD=00000000
+    volumes:
+      - minio_data:/data
+    command: server /data --console-address ":9001"
+volumes:
+ postgres_data:
+ mlflow_data:
+ airflow_dags:
+ airflow_logs:
+ minio_data:
