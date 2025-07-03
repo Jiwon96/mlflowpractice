@@ -1,35 +1,38 @@
-version: "3"
-
 services:
   postgres:
     image: postgres:13
     environment:
-      POSTGRES_PASSWORD: "0000"
-      POSTGRES_USER: postgres
-      POSTGRES_DB: KWS
-    ports:
-      - "5433:5432"
+      - POSTGRES_DB=airflow
+      - POSTGRES_USER=airflow
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
     volumes:
-      - postgres_data:/var/lib/postgresql/KWS
+      - postgres_data:/var/lib/postgresql/data
 
+  postgres-mlflow:
+    image: postgres:13
+    environment:
+      - POSTGRES_DB=mlflow
+      - POSTGRES_USER=mlflow
+      - POSTGRES_PASSWORD=${POSTGRES_MLFLOW_PASSWORD}
+    volumes:
+      - postgres_mlflow_data:/var/lib/postgresql/data
 
   mlflow:
     image: python:3.9
-    command: bash -c "pip install mlflow psycopg2-binary && sleep 30 && mlflow server --backend-store-uri postgresql://postgres:0000@postgres:5432/KWS --default-artifact-root ./mlruns --host 0.0.0.0 --port 5000"
+    command: bash -c "pip install mlflow psycopg2-binary && mlflow server --backend-store-uri postgresql://mlflow:${POSTGRES_MLFLOW_PASSWORD}@postgres-mlflow:5432/mlflow --default-artifact-root ./mlruns --host 0.0.0.0 --port 5000"
     ports:
       - "5000:5000"
     depends_on:
-      - postgres
+      - postgres-mlflow
     volumes:
       - mlflow_data:/app/mlruns
-
 
   airflow:
     image: apache/airflow:2.7.1
     environment:
       - AIRFLOW__CORE__EXECUTOR=LocalExecutor
-      - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://postgres:0000@postgres:5432/KWS
-      - AIRFLOW__CORE__FERNET_KEY=
+      - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://airflow:${POSTGRES_PASSWORD}@postgres:5432/airflow
+      - AIRFLOW__CORE__FERNET_KEY=${AIRFLOW_FERNET_KEY}
     ports:
       - "8080:8080"
     depends_on:
@@ -37,14 +40,14 @@ services:
     volumes:
       - airflow_dags:/opt/airflow/dags
       - airflow_logs:/opt/airflow/logs
-    command: bash -c "airflow db migrate && airflow users create --username admin --password admin --firstname Admin --lastname User --role Admin --email admin@example.com && airflow webserver"
+    command: bash -c "airflow db migrate && airflow users create --username ${AIRFLOW_ADMIN_USERNAME} --password ${AIRFLOW_ADMIN_PASSWORD} --firstname Admin --lastname User --role Admin --email ${AIRFLOW_ADMIN_EMAIL} && airflow webserver"
 
   airflow-scheduler:
     image: apache/airflow:2.7.1
     environment:
       - AIRFLOW__CORE__EXECUTOR=LocalExecutor
-      - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://postgres:0000@postgres:5432/KWS
-      - AIRFLOW__CORE__FERNET_KEY=
+      - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://airflow:${POSTGRES_PASSWORD}@postgres:5432/airflow
+      - AIRFLOW__CORE__FERNET_KEY=${AIRFLOW_FERNET_KEY}
     depends_on:
       - postgres
       - airflow
@@ -59,13 +62,14 @@ services:
       - "9000:9000"      # API 포트
       - "9001:9001"      # 웹 콘솔 포트
     environment:
-      - MINIO_ROOT_USER=admin
-      - MINIO_ROOT_PASSWORD=00000000
+      - MINIO_ROOT_USER=${MINIO_ROOT_USER}
+      - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD}
     volumes:
       - minio_data:/data
     command: server /data --console-address ":9001"
 volumes:
  postgres_data:
+ postgres_mlflow_data:
  mlflow_data:
  airflow_dags:
  airflow_logs:
