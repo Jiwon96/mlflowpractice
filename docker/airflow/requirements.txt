@@ -1,3 +1,6 @@
+# docker/airflow/requirements.txt
+typing_extensions>=4.6.0
+pydantic
 mlflow
 psycopg2-binary
 pandas

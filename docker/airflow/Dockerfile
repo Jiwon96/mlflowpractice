@@ -1,4 +1,5 @@
-FROM apache/airflow:2.7.1
+# 또는 최신 버전
+FROM apache/airflow:2.8.0
 
 USER airflow
 
