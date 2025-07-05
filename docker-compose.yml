@@ -1,3 +1,5 @@
+version: '3.8'
+
 services:
   postgres:
     image: postgres:13
@@ -7,6 +9,7 @@ services:
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
 
   postgres-mlflow:
     image: postgres:13
@@ -16,34 +19,43 @@ services:
       - POSTGRES_PASSWORD=${POSTGRES_MLFLOW_PASSWORD}
     volumes:
       - postgres_mlflow_data:/var/lib/postgresql/data
+    restart: unless-stopped
 
   mlflow:
-    image: python:3.9
-    command: bash -c "pip install mlflow psycopg2-binary && mlflow server --backend-store-uri postgresql://mlflow:${POSTGRES_MLFLOW_PASSWORD}@postgres-mlflow:5432/mlflow --default-artifact-root ./mlruns --host 0.0.0.0 --port 5000"
+    build: 
+      context: ./docker/mlflow
     ports:
       - "5000:5000"
+    environment:
+      - POSTGRES_MLFLOW_PASSWORD=${POSTGRES_MLFLOW_PASSWORD}
     depends_on:
       - postgres-mlflow
     volumes:
       - mlflow_data:/app/mlruns
+    restart: unless-stopped
 
   airflow:
-    image: apache/airflow:2.7.1
+    build:
+      context: ./docker/airflow
+    ports:
+      - "8080:8080"
     environment:
       - AIRFLOW__CORE__EXECUTOR=LocalExecutor
       - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://airflow:${POSTGRES_PASSWORD}@postgres:5432/airflow
       - AIRFLOW__CORE__FERNET_KEY=${AIRFLOW_FERNET_KEY}
-    ports:
-      - "8080:8080"
+      - AIRFLOW_ADMIN_USERNAME=${AIRFLOW_ADMIN_USERNAME}
+      - AIRFLOW_ADMIN_PASSWORD=${AIRFLOW_ADMIN_PASSWORD}
+      - AIRFLOW_ADMIN_EMAIL=${AIRFLOW_ADMIN_EMAIL}
     depends_on:
       - postgres
     volumes:
-      - airflow_dags:/opt/airflow/dags
+      - ./dags:/opt/airflow/dags
       - airflow_logs:/opt/airflow/logs
-    command: bash -c "airflow db migrate && airflow users create --username ${AIRFLOW_ADMIN_USERNAME} --password ${AIRFLOW_ADMIN_PASSWORD} --firstname Admin --lastname User --role Admin --email ${AIRFLOW_ADMIN_EMAIL} && airflow webserver"
+    restart: unless-stopped
 
   airflow-scheduler:
-    image: apache/airflow:2.7.1
+    build:
+      context: ./docker/airflow
     environment:
       - AIRFLOW__CORE__EXECUTOR=LocalExecutor
       - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://airflow:${POSTGRES_PASSWORD}@postgres:5432/airflow
@@ -52,25 +64,27 @@ services:
       - postgres
       - airflow
     volumes:
-      - airflow_dags:/opt/airflow/dags
+      - ./dags:/opt/airflow/dags
       - airflow_logs:/opt/airflow/logs
     command: airflow scheduler
-  
+    restart: unless-stopped
+
   minio:
     image: minio/minio:latest
     ports:
-      - "9000:9000"      # API 포트
-      - "9001:9001"      # 웹 콘솔 포트
+      - "9000:9000"
+      - "9001:9001"
     environment:
       - MINIO_ROOT_USER=${MINIO_ROOT_USER}
       - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD}
     volumes:
       - minio_data:/data
     command: server /data --console-address ":9001"
+    restart: unless-stopped
+
 volumes:
- postgres_data:
- postgres_mlflow_data:
- mlflow_data:
- airflow_dags:
- airflow_logs:
- minio_data:
+  postgres_data:
+  postgres_mlflow_data:
+  mlflow_data:
+  airflow_logs:
+  minio_data:
