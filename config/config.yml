@@ -1,0 +1,61 @@
+# MLOps 전체 시스템 설정
+mlflow:
+  tracking_uri: "http://localhost:5000"
+  experiment_name: "mnist_experiment"
+  artifact_location: "./mlruns"
+  registry_uri: "sqlite:///mlflow.db"
+
+database:
+  postgres:
+    host: "localhost"
+    port: 5432
+    database: "mlops_db"
+    username: "mlops_user"
+    password: "mlops_password"
+  
+airflow:
+  dag_schedule: "0 2 * * *"
+  max_active_runs: 1
+  catchup: false
+  retry_delay_minutes: 5
+  email_on_failure: false
+
+storage:
+  data_root: "./data"
+  model_registry: "./data/models"
+  logs_directory: "./logs"
+  artifacts_directory: "./artifacts"
+  temp_directory: "./temp"
+
+monitoring:
+  system_monitor_interval: 60  # seconds
+  performance_monitor_interval: 300  # seconds
+  alert_thresholds:
+    cpu_utilization: 80.0
+    memory_utilization: 85.0
+    gpu_utilization: 90.0
+    disk_utilization: 90.0
+    model_accuracy_drop: 0.05
+
+alerts:
+  slack:
+    webhook_url: "${SLACK_WEBHOOK_URL}"
+    channel: "#mlops-alerts"
+  email:
+    smtp_server: "smtp.gmail.com"
+    smtp_port: 587
+    username: "${EMAIL_USERNAME}"
+    password: "${EMAIL_PASSWORD}"
+    recipients: ["mlops-team@company.com"]
+
+security:
+  api_key_required: true
+  rate_limiting:
+    requests_per_minute: 100
+  cors:
+    allowed_origins: ["http://localhost:3000", "http://localhost:8080"]
+
+environment:
+  name: "development"  # development, staging, production
+  debug: true
+  log_level: "INFO"

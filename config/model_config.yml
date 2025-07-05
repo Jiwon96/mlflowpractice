@@ -1,0 +1,126 @@
+# 모델 아키텍처 및 하이퍼파라미터 설정
+model:
+  name: "mnist_cnn"
+  architecture: "cnn"
+  input_shape: [28, 28, 1]
+  num_classes: 10
+  
+  # CNN 레이어 설정
+  conv_layers:
+    - filters: 16
+      kernel_size: 3
+      activation: "relu"
+      padding: "same"
+    - filters: 32
+      kernel_size: 3
+      activation: "relu"
+      padding: "same"
+  
+  pooling:
+    type: "MaxPooling2D"
+    pool_size: 2
+    strides: 2
+  
+  dense_layers:
+    - units: 64
+      activation: "relu"
+      dropout: 0.5
+    - units: 10
+      activation: "softmax"
+  
+  regularization:
+    batch_normalization: true
+    dropout_rate: 0.25
+    l2_regularization: 0.0001
+
+training:
+  # 훈련 하이퍼파라미터
+  epochs: 20
+  batch_size: 32
+  learning_rate: 0.001
+  validation_split: 0.2
+  
+  # 옵티마이저 설정
+  optimizer:
+    type: "Adam"
+    beta_1: 0.9
+    beta_2: 0.999
+    epsilon: 1e-7
+    clipnorm: 1.0
+  
+  # 손실 함수
+  loss: "sparse_categorical_crossentropy"
+  
+  # 콜백 설정
+  callbacks:
+    early_stopping:
+      monitor: "val_accuracy"
+      patience: 5
+      restore_best_weights: true
+    
+    reduce_lr:
+      monitor: "val_loss"
+      factor: 0.5
+      patience: 3
+      min_lr: 1e-7
+    
+    model_checkpoint:
+      monitor: "val_accuracy"
+      save_best_only: true
+      save_weights_only: false
+
+evaluation:
+  # 평가 메트릭
+  metrics:
+    - "accuracy"
+    - "precision"
+    - "recall"
+    - "f1_score"
+  
+  # 성능 임계값
+  thresholds:
+    min_accuracy: 0.95
+    min_precision: 0.90
+    min_recall: 0.90
+    max_inference_time_ms: 100
+    max_model_size_mb: 50
+
+# 온디바이스 최적화 설정
+optimization:
+  # TensorFlow Lite 변환
+  tflite:
+    quantization: true
+    optimization: ["DEFAULT"]
+    representative_dataset_size: 100
+    target_spec: "TFLITE_BUILTINS_INT8"
+  
+  # 모델 압축
+  compression:
+    pruning:
+      enable: true
+      sparsity: 0.5
+      frequency: 100
+    
+    quantization_aware_training:
+      enable: false
+      delay: 1000
+
+hyperparameter_tuning:
+  enable: false
+  framework: "optuna"  # optuna, hyperopt, ray_tune
+  trials: 50
+  
+  search_space:
+    learning_rate:
+      type: "log_uniform"
+      low: 1e-5
+      high: 1e-2
+    
+    batch_size:
+      type: "categorical"
+      choices: [16, 32, 64]
+    
+    dropout_rate:
+      type: "uniform"
+      low: 0.1
+      high: 0.5

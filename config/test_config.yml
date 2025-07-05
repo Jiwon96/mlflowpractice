@@ -1,0 +1,18 @@
+# 테스트용 빠른 설정
+mlflow:
+  tracking_uri: "http://localhost:5000"
+  experiment_name: "mnist_test"
+
+data:
+  raw_path: "./test_data"
+  processed_path: "./test_data/processed"
+  validation_split: 0.1
+
+model:
+  learning_rate: 0.001
+  epochs: 3  # 테스트용 빠른 설정
+  batch_size: 32
+  
+test:
+  quick_mode: true
+  sample_size: 1000
