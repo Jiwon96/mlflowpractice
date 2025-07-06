@@ -197,8 +197,8 @@ class ModelTrainer:
         """모델 저장 및 MLflow에 등록"""
         
         # Keras 모델 저장
-        keras_model_path = os.path.join(model_save_path, 'keras_model.keras')
-        self.model.save(keras_model_path)
+        keras_model_path = os.path.join(model_save_path, 'keras_model')
+        self.model.export(keras_model_path)
         
         # TensorFlow Lite 모델 변환 및 저장
         tflite_model = self.model.convert_to_tflite()
@@ -217,6 +217,7 @@ class ModelTrainer:
         mlflow.log_artifacts(model_save_path)
         
         # 모델 크기 정보
+        
         keras_size = sum(os.path.getsize(os.path.join(keras_model_path, f)) 
                         for f in os.listdir(keras_model_path) if os.path.isfile(os.path.join(keras_model_path, f)))
         tflite_size = os.path.getsize(tflite_path)

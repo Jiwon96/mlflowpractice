@@ -48,6 +48,23 @@ alerts:
     password: "${EMAIL_PASSWORD}"
     recipients: ["mlops-team@company.com"]
 
+# 모델 설정 추가
+model:
+  epochs: 10
+  batch_size: 32
+  learning_rate: 0.001
+  validation_split: 0.2
+  optimizer: "adam"
+  loss_function: "sparse_categorical_crossentropy"
+  metrics: ["accuracy"]
+  early_stopping:
+    patience: 3
+    monitor: "val_accuracy"
+  model_checkpoint:
+    save_best_only: true
+    monitor: "val_accuracy"
+    mode: "max"
+
 security:
   api_key_required: true
   rate_limiting:

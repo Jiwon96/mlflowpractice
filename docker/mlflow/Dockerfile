@@ -2,12 +2,14 @@ FROM python:3.9
 
 WORKDIR /app
 
-RUN pip install mlflow psycopg2-binary
+COPY requirements.txt .
+
+RUN pip install -r requirements.txt
+
+# 시작 스크립트 복사
+COPY start.sh /app/start.sh
+RUN chmod +x /app/start.sh
 
 EXPOSE 5000
 
-CMD mlflow server \
-    --backend-store-uri postgresql://mlflow:${POSTGRES_MLFLOW_PASSWORD}@postgres-mlflow:5432/mlflow \
-    --default-artifact-root ./mlruns \
-    --host 0.0.0.0 \
-    --port 5000
+CMD ["/app/start.sh"]

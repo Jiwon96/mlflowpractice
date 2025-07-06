@@ -1,0 +1,6 @@
+mlflow
+boto3
+botocore
+s3fs
+psycopg2-binary
+python-dotenv

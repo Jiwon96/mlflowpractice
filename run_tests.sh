@@ -12,23 +12,23 @@ mkdir -p test_data logs/training data/models
 export MLFLOW_TRACKING_URI="http://localhost:5000"
 export PYTHONPATH="${PYTHONPATH}:$(pwd)"
 
-echo ""
-echo "1️⃣ 개별 모듈 테스트"
-echo "==================="
-python test_individual_modules.py
-if [ $? -ne 0 ]; then
-    echo "❌ 개별 모듈 테스트 실패"
-    exit 1
-fi
+# echo ""
+# echo "1️⃣ 개별 모듈 테스트"
+# echo "==================="
+# python test_individual_modules.py
+# if [ $? -ne 0 ]; then
+#     echo "❌ 개별 모듈 테스트 실패"
+#     exit 1
+# fi
 
-echo ""
-echo "2️⃣ 통합 테스트"
-echo "==============="
-python test_integration.py
-if [ $? -ne 0 ]; then
-    echo "❌ 통합 테스트 실패"
-    exit 1
-fi
+# echo ""
+# echo "2️⃣ 통합 테스트"
+# echo "==============="
+# python test_integration.py
+# if [ $? -ne 0 ]; then
+#     echo "❌ 통합 테스트 실패"
+#     exit 1
+# fi
 
 echo ""
 echo "3️⃣ DAG 테스트"

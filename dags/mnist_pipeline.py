@@ -1,10 +1,11 @@
 from airflow import DAG
-from airflow.operators.python_operator import PythonOperator
-from airflow.operators.bash_operator import BashOperator
-from airflow.utils.dates import days_ago
+from airflow.operators.python import PythonOperator
+from airflow.operators.bash import BashOperator
 from datetime import datetime, timedelta
 import sys
 import os
+
+import tensorflow as tf
 
 # 프로젝트 경로 추가
 sys.path.append('/opt/airflow/dags/mnist-mlops')
@@ -22,7 +23,7 @@ from config.config import load_config
 default_args = {
     'owner': 'mlops-team',
     'depends_on_past': False,
-    'start_date': days_ago(1),
+    'start_date': datetime.now() - timedelta(days=1),
     'email_on_failure': False,
     'email_on_retry': False,
     'retries': 1,
@@ -34,7 +35,7 @@ dag = DAG(
     'mnist_mlops_pipeline',
     default_args=default_args,
     description='MNIST MLOps 전체 파이프라인',
-    schedule_interval='0 2 * * *',  # 매일 새벽 2시
+    schedule='0 2 * * *',  # 매일 새벽 2시
     catchup=False,
     tags=['mlops', 'mnist', 'computer-vision'],
 )
@@ -73,40 +74,60 @@ def download_and_validate_data(**context):
     }
 
 def preprocess_data(**context):
-    """데이터 전처리"""
-    print("데이터 전처리 시작...")
-    
-    # 이전 태스크 결과 확인
-    data_info = context['task_instance'].xcom_pull(task_ids='download_and_validate_data')
-    
-    if not data_info["data_quality_passed"]:
-        raise ValueError("데이터 품질 검증 실패")
-    
-    # 데이터 로더 및 전처리기 초기화
-    data_loader = MNISTDataLoader()
-    preprocessor = DataPreprocessor(batch_size=32)
-    
-    # 데이터 로드
-    ds_train, ds_test, ds_info = data_loader.download_data()
-    
-    # 데이터 파이프라인 생성
-    train_ds, val_ds, test_ds = preprocessor.create_data_pipeline(ds_train, ds_test, ds_info)
-    
-    # 데이터 누출 검사
-    validator = DataValidator()
-    leakage_check = validator.check_data_leakage(train_ds, val_ds)
-    
-    if leakage_check["is_leakage_detected"]:
-        raise ValueError("데이터 누출이 감지되었습니다!")
-    
-    print("데이터 전처리 완료")
-    
-    return {
-        "preprocessing_completed": True,
-        "train_batches": len(list(train_ds)),
-        "val_batches": len(list(val_ds)),
-        "test_batches": len(list(test_ds))
-    }
+   """데이터 전처리"""
+   print("데이터 전처리 시작...")
+   
+   # 이전 태스크 결과 확인
+   data_info = context['task_instance'].xcom_pull(task_ids='download_and_validate_data')
+   
+   if not data_info["data_quality_passed"]:
+       raise ValueError("데이터 품질 검증 실패")
+   
+   # 데이터 로더 및 전처리기 초기화
+   data_loader = MNISTDataLoader()
+   preprocessor = DataPreprocessor(batch_size=32)
+   
+   # 데이터 로드
+   ds_train, ds_test, ds_info = data_loader.download_data()
+   
+   print('데이터 로드')
+
+   # 데이터 파이프라인 생성
+   train_ds, val_ds, test_ds = preprocessor.create_data_pipeline(ds_train, ds_test, ds_info)
+   print('데이터 파이프 라인 생성')
+
+   # 데이터 누출 검사
+   validator = DataValidator()
+   leakage_check = validator.check_data_leakage(train_ds, val_ds)
+   
+   if leakage_check["is_leakage_detected"]:
+       raise ValueError("데이터 누출이 감지되었습니다!")
+   
+   print("데이터 전처리 완료")
+   
+   # 안전한 배치 수 계산
+   def count_batches(dataset):
+       try:
+           # cardinality() 사용 (TensorFlow 2.x 권장)
+           cardinality = dataset.cardinality().numpy()
+           if cardinality >= 0:
+               return int(cardinality)
+           else:
+               # Unknown인 경우 실제로 세어보기
+               count = 0
+               for _ in dataset:
+                   count += 1
+               return count
+       except Exception as e:
+           print(f"배치 수 계산 오류: {e}")
+           return "Unknown"
+   
+   return {
+       "preprocessing_completed": True,
+       "train_batches": count_batches(train_ds),
+       "val_batches": count_batches(val_ds),
+       "test_batches": count_batches(test_ds)
+   }
 
 def train_model(**context):
     """모델 훈련"""

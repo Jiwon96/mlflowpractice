@@ -46,6 +46,10 @@ class MNISTCNNModel(keras.Model):
     
     def get_model_summary(self):
         """모델 구조 정보 반환"""
+        if not self.built:
+            # input_shape을 명시적으로 지정해서 빌드
+            # MNIST의 경우 (28, 28, 1) 또는 (None, 28, 28, 1)
+            self.build(input_shape=(None, 28, 28, 1))  # 배치 크기는 None
         total_params = self.count_params()
         trainable_params = sum([tf.size(w).numpy() for w in self.trainable_weights])
         

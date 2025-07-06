@@ -29,13 +29,13 @@ def run_mini_pipeline():
         
         data_loader = MNISTDataLoader(data_dir="./test_data")
         ds_train, ds_test, ds_info = data_loader.download_data()
-        
+        print('loader 끝')
         preprocessor = DataPreprocessor(batch_size=32, validation_split=0.1)
         train_ds, val_ds, test_ds = preprocessor.create_data_pipeline(ds_train, ds_test, ds_info)
-        
+        print('DataPreprocessor 끝')
         validator = DataValidator()
         train_validation = validator.validate_data_quality(train_ds, "train")
-        
+        print('DataValidator 끝')
         print("✅ 데이터 파이프라인 완료")
         
         # 2. 모델 파이프라인

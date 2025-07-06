@@ -28,10 +28,12 @@ services:
       - "5000:5000"
     environment:
       - POSTGRES_MLFLOW_PASSWORD=${POSTGRES_MLFLOW_PASSWORD}
-    depends_on:
+      - AWS_ACCESS_KEY_ID=${MINIO_ROOT_USER}
+      - AWS_SECRET_ACCESS_KEY=${MINIO_ROOT_PASSWORD}
+      - MLFLOW_S3_ENDPOINT_URL=http://minio:9000
+    depends_on:  # 이 줄의 들여쓰기가 mlflow와 같은 레벨이어야 함
       - postgres-mlflow
-    volumes:
-      - mlflow_data:/app/mlruns
+      - minio
     restart: unless-stopped
 
   airflow:
